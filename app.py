@@ -1,19 +1,28 @@
 import requests
 import streamlit as st
 
+#VERCEL_API_URL = "https://nl-to-sql-engine.vercel.app/analyze"
+
+
+import streamlit as st
+import requests
+
 # Page Configuration
 st.set_page_config(
-    page_title="E-Commerce Intelligence Hub",
+    page_title="Natural Language SQL Engine",
     page_icon="⚡",
     layout="centered"
 )
 
-# 1. New Title & Tagline
-st.title("⚡ Text-to-SQL Data Assistant")
-st.caption("Ask natural language questions to query live sales and inventory data.")
+# Backend Vercel Endpoint URL
+VERCEL_API_URL = "https://nl-to-sql-engine.vercel.app/analyze"
 
-# 2. Database Overview with Detailed Samples
-with st.expander("📊 **Database Context & Schema Details**", expanded=True):
+# 1. Title
+st.title("⚡ Natural Language SQL Engine")
+st.caption("Ask questions in plain English—our AI agent translates them into SQL queries against the live database.")
+
+# 2. Database Overview & Schema (Top Section)
+with st.expander("📊 **Database Context & Schema Details**", expanded=False):
     tab1, tab2 = st.tabs(["📦 Products Table", "💳 Transactions Table"])
 
     with tab1:
@@ -39,30 +48,40 @@ with st.expander("📊 **Database Context & Schema Details**", expanded=True):
         * **ID #103:** Product ID `2` | Qty: `3` | Total: `$750.00` | Date: `2026-07-02`
         """)
 
-st.divider()
+# 3. Initialize Conversation Session State
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# 3. Search Bar with Increased Vertical Size
-st.subheader("🔍 Ask a Question")
+# 4. Render Conversation History
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
 
-# Using st.text_area with fixed height gives a larger vertical footprint
-user_prompt = st.text_area(
-    label="Search query:",
-    placeholder="e.g., Which products are low on stock (less than 15 items) and how many sales have they had?",
-    height=75,
-    label_visibility="collapsed"
-)
+# 5. Search Box Pinned to the Bottom
+if prompt := st.chat_input("Ask a question about sales, products, or revenue..."):
 
-VERCEL_API_URL = "https://nl-to-sql-engine.vercel.app/analyze"
-# Execution Logic
-if st.button("Run Query", type="primary") or user_prompt:
-    if user_prompt.strip():
-        with st.spinner("Analyzing schema, generating SQL, and retrieving results..."):
+    # Render user prompt immediately in UI
+    st.chat_message("user").write(prompt)
+    st.session_state.messages.append({"role": "user", "content": prompt})
+
+    # Fetch answer from backend
+    with st.chat_message("assistant"):
+        with st.spinner("Translating to SQL & querying database..."):
             try:
-                response = requests.get(f"{VERCEL_API_URL}/analyze", params={"prompt": user_prompt})
+                # Strip leading/trailing newlines to ensure clean HTTP parameter parsing
+                clean_prompt = prompt.strip()
+
+                response = requests.get(
+                    f"{VERCEL_API_URL}/analyze",
+                    params={"prompt": clean_prompt}
+                )
+
                 if response.status_code == 200:
-                    st.success("Query Result:")
-                    st.write(response.json().get("result"))
+                    answer = response.json().get("result")
+                    st.write(answer)
+                    st.session_state.messages.append({"role": "assistant", "content": answer})
                 else:
-                    st.error(f"Error {response.status_code}: {response.text}")
+                    error_msg = f"Error {response.status_code}: {response.text}"
+                    st.error(error_msg)
             except Exception as e:
                 st.error(f"Could not connect to backend: {e}")
