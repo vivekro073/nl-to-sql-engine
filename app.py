@@ -1,40 +1,66 @@
 import requests
 import streamlit as st
 
-st.set_page_config(page_title="SQL Data Assistant", page_icon="📊")
-st.title("📊 Natural Language to SQL Engine")
+# Page Configuration
+st.set_page_config(
+    page_title="E-Commerce Natural Language SQL Agent",
+    page_icon="🤖",
+    layout="centered"
+)
 
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# Title & Description
+st.title("🤖 E-Commerce Data Assistant")
+st.markdown("Ask natural language questions about our store's inventory and transactions.")
 
-# Display prior chat history
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
+# 1. Database Context First
+with st.expander("📊 **Database Overview & What You Can Ask**", expanded=True):
+    st.write(
+        "This assistant queries a **Neon PostgreSQL** database storing simulated e-commerce operations:"
+    )
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("""
+        **📦 `products` Table (20 items)**
+        * `product_id`, `name`
+        * `category`, `price`
+        * `stock_quantity`
+        """)
+    with col2:
+        st.markdown("""
+        **💳 `transactions` Table (100 records)**
+        * `transaction_id`, `product_id`
+        * `quantity_sold`, `total_amount`
+        * `sale_date`
+        """)
 
-# User input
-if prompt := st.chat_input(
-    "Ask a question (e.g., Show me total revenue per product...)"
-):
-    # Render user prompt
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.write(prompt)
+    st.markdown("**💡 Example Questions to Try:**")
+    st.caption("• *What are the top 3 best-selling products by total revenue?*")
+    st.caption("• *List all products with stock quantity less than 15.*")
+    st.caption("• *What was our total sales volume across all categories?*")
 
-    # Call your FastAPI endpoint
-    with st.chat_message("assistant"):
-        with st.spinner("Analyzing database..."):
-            try:
-                # Assuming POST endpoint on FastAPI (or encode params for GET)
-                response = requests.get(f"https://nl-to-sql-engine.vercel.app/analyze/{prompt}")
-                if response.status_code == 200:
-                    answer = response.json().get("result", "No result returned.")
-                    st.write(answer)
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": answer}
-                    )
-                else:
-                    st.error(f"API Error: {response.status_code}")
-            except Exception as e:
-                st.error(f"Failed to connect to backend: {e}")
+st.divider()
+
+# 2. Search Bar Directly Below Database Context
+st.subheader("🔍 Ask a Question")
+user_prompt = st.text_input(
+    label="Ask a question:",
+    placeholder="e.g., Which electronics generated the highest revenue?",
+    label_visibility="collapsed"
+)
+
+# Backend Vercel URL
+
+VERCEL_API_URL = "https://nl-to-sql-engine.vercel.app/analyze"
+
+# Query Execution
+if user_prompt:
+    with st.spinner("Analyzing schema, drafting SQL, and fetching results..."):
+        try:
+            response = requests.get(f"{VERCEL_API_URL}/analyze/{user_prompt}")
+            if response.status_code == 200:
+                st.success("Result:")
+                st.write(response.json().get("result"))
+            else:
+                st.error(f"Error {response.status_code}: {response.text}")
+        except Exception as e:
+            st.error(f"Could not connect to backend: {e}")
