@@ -1,11 +1,6 @@
 import requests
 import streamlit as st
 
-VERCEL_API_URL = "https://nl-to-sql-engine.vercel.app/analyze"
-
-import streamlit as st
-import requests
-
 # Page Configuration
 st.set_page_config(
     page_title="E-Commerce Intelligence Hub",
@@ -56,6 +51,8 @@ user_prompt = st.text_area(
     height=75,
     label_visibility="collapsed"
 )
+
+VERCEL_API_URL = "https://nl-to-sql-engine.vercel.app/analyze"
 # Execution Logic
 if st.button("Run Query", type="primary") or user_prompt:
     if user_prompt.strip():
