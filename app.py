@@ -27,7 +27,7 @@ if prompt := st.chat_input(
         with st.spinner("Analyzing database..."):
             try:
                 # Assuming POST endpoint on FastAPI (or encode params for GET)
-                response = requests.get(f"http://127.0.0.1:8000/analyze/{prompt}")
+                response = requests.get(f"https://nl-to-sql-engine.vercel.app/analyze/{prompt}")
                 if response.status_code == 200:
                     answer = response.json().get("result", "No result returned.")
                     st.write(answer)
