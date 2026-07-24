@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-import uvicorn
+import os
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_community.agent_toolkits.sql.base import create_sql_agent
@@ -11,9 +11,14 @@ load_dotenv()
 
 app = FastAPI()
 
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///ecommerce.db")
+
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 llm = ChatGroq(temperature=0, model_name="llama-3.3-70b-versatile")
 
-db = SQLDatabase.from_uri("sqlite:///ecommerce.db")
+db = SQLDatabase.from_uri(DATABASE_URL)
 
 toolkit = SQLDatabaseToolkit(db = db, llm = llm)
 

@@ -1,8 +1,9 @@
 fastapi
-uvicorn[standard]
-python-dotenv
+uvicorn
 langchain
 langchain-community
 langchain-groq
-pydantic
 sqlalchemy
+psycopg2-binary
+requests
+python-dotenv
