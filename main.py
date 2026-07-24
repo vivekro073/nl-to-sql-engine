@@ -42,7 +42,7 @@ def run_pipeline(user_query:str) -> str:
 def home():
     return {"message": "Hello World"}
 
-@app.get("/analyze/{query}")
-async def get(query: str):
-    response =  run_pipeline(query)
-    return {"query": query, "result": response}
+@app.get("/analyze")
+def analyze(prompt: str):
+    result = agent_executor.invoke({"input": prompt})
+    return {"result": result["output"]}

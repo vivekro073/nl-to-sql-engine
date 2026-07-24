@@ -58,7 +58,7 @@ if st.button("Run Query", type="primary") or user_prompt:
     if user_prompt.strip():
         with st.spinner("Analyzing schema, generating SQL, and retrieving results..."):
             try:
-                response = requests.get(f"{VERCEL_API_URL}/analyze/{user_prompt}")
+                response = requests.get(f"{VERCEL_API_URL}/analyze", params={"prompt": user_prompt})
                 if response.status_code == 200:
                     st.success("Query Result:")
                     st.write(response.json().get("result"))
