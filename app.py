@@ -1,66 +1,71 @@
 import requests
 import streamlit as st
 
+VERCEL_API_URL = "https://nl-to-sql-engine.vercel.app/analyze"
+
+import streamlit as st
+import requests
+
 # Page Configuration
 st.set_page_config(
-    page_title="E-Commerce Natural Language SQL Agent",
-    page_icon="🤖",
+    page_title="E-Commerce Intelligence Hub",
+    page_icon="⚡",
     layout="centered"
 )
 
-# Title & Description
-st.title("🤖 E-Commerce Data Assistant")
-st.markdown("Ask natural language questions about our store's inventory and transactions.")
+# 1. New Title & Tagline
+st.title("⚡ Text-to-SQL Data Assistant")
+st.caption("Ask natural language questions to query live sales and inventory data.")
 
-# 1. Database Context First
-with st.expander("📊 **Database Overview & What You Can Ask**", expanded=True):
-    st.write(
-        "This assistant queries a **Neon PostgreSQL** database storing simulated e-commerce operations:"
-    )
-    col1, col2 = st.columns(2)
-    with col1:
+# 2. Database Overview with Detailed Samples
+with st.expander("📊 **Database Context & Schema Details**", expanded=True):
+    tab1, tab2 = st.tabs(["📦 Products Table", "💳 Transactions Table"])
+
+    with tab1:
+        st.markdown("**Table:** `products` (20 items total)")
         st.markdown("""
-        **📦 `products` Table (20 items)**
-        * `product_id`, `name`
-        * `category`, `price`
-        * `stock_quantity`
-        """)
-    with col2:
-        st.markdown("""
-        **💳 `transactions` Table (100 records)**
-        * `transaction_id`, `product_id`
-        * `quantity_sold`, `total_amount`
-        * `sale_date`
+        Contains store catalog details including product categories, pricing, and stock levels.
+
+        *Sample Items:*
+        * **Wireless Headphones** (Category: *Electronics*, Price: *$120.00*, Stock: *45*)
+        * **Ergonomic Office Chair** (Category: *Furniture*, Price: *$250.00*, Stock: *12*)
+        * **Stainless Steel Water Bottle** (Category: *Home & Kitchen*, Price: *$25.00*, Stock: *80*)
+        * **Mechanical Gaming Keyboard** (Category: *Electronics*, Price: *$95.00*, Stock: *8*)
         """)
 
-    st.markdown("**💡 Example Questions to Try:**")
-    st.caption("• *What are the top 3 best-selling products by total revenue?*")
-    st.caption("• *List all products with stock quantity less than 15.*")
-    st.caption("• *What was our total sales volume across all categories?*")
+    with tab2:
+        st.markdown("**Table:** `transactions` (100 records total)")
+        st.markdown("""
+        Contains customer purchase logs linked via `product_id`.
+
+        *Sample Transactions:*
+        * **ID #101:** Product ID `1` | Qty: `2` | Total: `$240.00` | Date: `2026-06-15`
+        * **ID #102:** Product ID `4` | Qty: `1` | Total: `$95.00`  | Date: `2026-06-18`
+        * **ID #103:** Product ID `2` | Qty: `3` | Total: `$750.00` | Date: `2026-07-02`
+        """)
 
 st.divider()
 
-# 2. Search Bar Directly Below Database Context
+# 3. Search Bar with Increased Vertical Size
 st.subheader("🔍 Ask a Question")
-user_prompt = st.text_input(
-    label="Ask a question:",
-    placeholder="e.g., Which electronics generated the highest revenue?",
+
+# Using st.text_area with fixed height gives a larger vertical footprint
+user_prompt = st.text_area(
+    label="Search query:",
+    placeholder="e.g., Which products are low on stock (less than 15 items) and how many sales have they had?",
+    height=75,
     label_visibility="collapsed"
 )
-
-# Backend Vercel URL
-
-VERCEL_API_URL = "https://nl-to-sql-engine.vercel.app/analyze"
-
-# Query Execution
-if user_prompt:
-    with st.spinner("Analyzing schema, drafting SQL, and fetching results..."):
-        try:
-            response = requests.get(f"{VERCEL_API_URL}/analyze/{user_prompt}")
-            if response.status_code == 200:
-                st.success("Result:")
-                st.write(response.json().get("result"))
-            else:
-                st.error(f"Error {response.status_code}: {response.text}")
-        except Exception as e:
-            st.error(f"Could not connect to backend: {e}")
+# Execution Logic
+if st.button("Run Query", type="primary") or user_prompt:
+    if user_prompt.strip():
+        with st.spinner("Analyzing schema, generating SQL, and retrieving results..."):
+            try:
+                response = requests.get(f"{VERCEL_API_URL}/analyze/{user_prompt}")
+                if response.status_code == 200:
+                    st.success("Query Result:")
+                    st.write(response.json().get("result"))
+                else:
+                    st.error(f"Error {response.status_code}: {response.text}")
+            except Exception as e:
+                st.error(f"Could not connect to backend: {e}")
